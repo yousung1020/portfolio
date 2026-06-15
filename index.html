@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>슈팅스타 | Spring Boot Developer Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #070b14;
+      --bg-card: rgba(14, 20, 38, 0.72);
+      --border: rgba(139, 92, 246, 0.22);
+      --purple: #a78bfa;
+      --purple-deep: #7c3aed;
+      --cyan: #22d3ee;
+      --text: #e8eaf0;
+      --muted: #94a3b8;
+      --text-soft: #c5ced9;
+      --glow: 0 0 40px rgba(167, 139, 250, 0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    #starfield {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 55% at 15% 20%, rgba(124, 58, 237, 0.14), transparent 55%),
+        radial-gradient(ellipse 60% 45% at 85% 75%, rgba(34, 211, 238, 0.09), transparent 50%),
+        radial-gradient(ellipse 50% 40% at 55% 45%, rgba(99, 102, 241, 0.06), transparent 45%),
+        linear-gradient(175deg, #050810 0%, #070b14 40%, #0a1020 100%);
+    }
+
+    .star-layer {
+      position: absolute; inset: -8% 0;
+      will-change: transform;
+    }
+    .star-layer--far  { z-index: 1; }
+    .star-layer--mid  { z-index: 2; }
+    .star-layer--near { z-index: 3; }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: twinkle var(--d, 3s) var(--ease, ease-in-out) infinite alternate;
+      animation-delay: var(--delay, 0s);
+    }
+    .star--dust {
+      background: rgba(220, 230, 255, 0.55);
+    }
+    .star--dot {
+      background: #eef2ff;
+    }
+    .star--glow {
+      background: #fff;
+      box-shadow:
+        0 0 calc(var(--glow, 4px)) calc(var(--glow, 4px) * 0.35) var(--tint, rgba(255, 255, 255, 0.45)),
+        0 0 calc(var(--glow, 4px) * 2) calc(var(--glow, 4px) * 0.6) var(--tint-soft, rgba(255, 255, 255, 0.12));
+    }
+    .star--sparkle {
+      background: transparent;
+      border-radius: 0;
+    }
+    .star--sparkle::before,
+    .star--sparkle::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(90deg, transparent, #fff 42%, #fff 58%, transparent);
+      border-radius: 1px;
+      box-shadow: 0 0 8px 1px var(--tint-soft, rgba(167, 139, 250, 0.35));
+    }
+    .star--sparkle::before {
+      width: var(--arm, 10px);
+      height: 1px;
+    }
+    .star--sparkle::after {
+      width: 1px;
+      height: var(--arm, 10px);
+      background: linear-gradient(180deg, transparent, #fff 42%, #fff 58%, transparent);
+    }
+
+    @keyframes twinkle {
+      0%   { opacity: var(--min, 0.15); transform: translate(-50%, -50%) scale(0.92); }
+      100% { opacity: var(--max, 1);    transform: translate(-50%, -50%) scale(1); }
+    }
+
+    #shooting-stars {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .shooting-star {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: var(--tail, 140px);
+      height: 3px;
+      opacity: 0;
+      transform-origin: left center;
+      will-change: transform, opacity;
+      animation: shoot var(--dur, 2.8s) linear infinite;
+      animation-delay: var(--delay, 0s);
+    }
+    .shooting-star::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to right,
+        #fff 0%,
+        var(--core, rgba(224, 242, 254, 0.95)) 10%,
+        var(--glow, rgba(34, 211, 238, 0.35)) 28%,
+        transparent 100%
+      );
+      clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+    }
+    .shooting-star::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: #fff;
+      transform: translate(-50%, -50%);
+      box-shadow:
+        0 0 6px 2px rgba(255, 255, 255, 0.95),
+        0 0 14px 4px var(--glow, rgba(34, 211, 238, 0.45)),
+        0 0 24px 6px var(--glow-soft, rgba(34, 211, 238, 0.2));
+    }
+    /* transform 경로는 JS에서 요소별 @keyframes로 주입 (CSS 변수 transform 보간 불가) */
+
+    @media (prefers-reduced-motion: reduce) {
+      .star, .shooting-star { animation: none !important; }
+      .star-layer { transform: none !important; }
+    }
+
+    .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(7, 11, 20, 0.85);
+      border-bottom: 1px solid var(--border);
+      margin: 0 -24px 40px; padding: 0 24px;
+    }
+    nav ul {
+      display: flex; justify-content: center; gap: 8px; list-style: none;
+      overflow-x: auto; padding: 14px 0;
+      scrollbar-width: none;
+    }
+    nav a {
+      color: var(--muted); text-decoration: none; font-size: 0.85rem;
+      padding: 6px 14px; border-radius: 999px; white-space: nowrap;
+      transition: all 0.25s;
+    }
+    nav a:hover, nav a.active { color: var(--purple); background: rgba(167,139,250,0.1); }
+
+    .hero {
+      display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px;
+      align-items: center; min-height: 85vh; padding: 60px 0 40px;
+    }
+
+    .avatar-wrap {
+      position: relative; width: 260px; height: 260px; margin: 0 auto;
+    }
+    .avatar-ring {
+      position: absolute; inset: -8px; border-radius: 50%;
+      background: conic-gradient(from 0deg, var(--purple-deep), var(--cyan), var(--purple-deep));
+      animation: spin 8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .avatar {
+      position: relative; width: 100%; height: 100%; border-radius: 50%;
+      border: 4px solid var(--bg);
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      overflow: hidden;
+    }
+    .avatar img {
+      width: 100%; height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center 32%;
+      display: block;
+    }
+
+    .hero-tag {
+      display: inline-block; font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--cyan); margin-bottom: 12px;
+    }
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif; font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700; line-height: 1.2; margin-bottom: 8px;
+    }
+    .hero h1 span { color: var(--purple); }
+    .hero-sub { color: var(--muted); font-size: 1rem; margin-bottom: 28px; }
+
+    .contact-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .contact-item {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      align-items: start;
+      gap: 12px 16px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+    }
+    .contact-item:last-child { border-bottom: none; }
+
+    .contact-item .label {
+      color: var(--purple);
+      font-weight: 700;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      white-space: nowrap;
+    }
+
+    .contact-value {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      min-width: 0;
+    }
+
+    .contact-value a {
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.2s;
+      word-break: break-all;
+    }
+    .contact-value a:hover { color: var(--cyan); }
+
+    .contact-divider {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+
+    section { margin-bottom: 72px; scroll-margin-top: 70px; }
+    .section-label {
+      font-family: 'Space Grotesk', sans-serif; font-size: 0.7rem;
+      letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan);
+      margin-bottom: 8px;
+    }
+    h2 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 1.8rem;
+      font-weight: 700; margin-bottom: 28px;
+    }
+    h2::after {
+      content: ''; display: block; width: 48px; height: 3px;
+      background: linear-gradient(90deg, var(--purple-deep), var(--cyan));
+      border-radius: 2px; margin-top: 10px;
+    }
+
+    .about-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+    .about-list li {
+      display: flex; gap: 14px; align-items: flex-start;
+      padding: 16px 20px; border-radius: 12px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); transition: border-color 0.3s, transform 0.3s;
+    }
+    .about-list li:hover { border-color: var(--purple); transform: translateX(4px); }
+    .about-num {
+      font-family: 'Space Grotesk', sans-serif; font-weight: 700;
+      color: var(--purple); font-size: 1.1rem; min-width: 24px;
+    }
+
+    .stacks-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .stack-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; backdrop-filter: blur(8px);
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .stack-card:hover { box-shadow: var(--glow); border-color: var(--purple); }
+    .stack-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .stack-name { font-family: 'Space Grotesk', sans-serif; font-size: 1.15rem; font-weight: 700; }
+    .skill-bar-wrap { margin-bottom: 14px; }
+    .skill-bar-label { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+    .skill-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+    .skill-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, var(--purple-deep), var(--cyan));
+      width: 0; transition: width 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .stack-desc { font-size: 0.88rem; color: var(--text-soft); line-height: 1.75; }
+    .stack-desc li { margin-bottom: 8px; list-style: none; padding-left: 16px; position: relative; }
+    .stack-desc li::before { content: '▸'; position: absolute; left: 0; color: var(--purple); }
+
+    .projects-list { display: flex; flex-direction: column; gap: 20px; }
+    .project-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; backdrop-filter: blur(8px);
+      display: grid; grid-template-columns: auto 1fr; gap: 20px;
+      transition: box-shadow 0.3s, border-color 0.3s;
+    }
+    .project-card:hover { box-shadow: var(--glow); border-color: rgba(34,211,238,0.4); }
+
+    .project-icon { font-size: 2rem; line-height: 1; }
+    .project-name {
+      font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem;
+      font-weight: 700; margin-bottom: 8px;
+    }
+    .project-desc { font-size: 0.9rem; color: var(--text-soft); line-height: 1.75; margin-bottom: 14px; }
+    .project-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--cyan); text-decoration: none; font-size: 0.85rem;
+      font-family: 'Space Grotesk', sans-serif; transition: gap 0.2s;
+    }
+    .project-link:hover { gap: 10px; }
+
+    .info-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .info-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 28px; backdrop-filter: blur(8px);
+    }
+    .info-card h3 {
+      font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+    .info-card p, .info-card li { font-size: 0.9rem; color: var(--muted); }
+    .info-card ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .edu-school { color: var(--text); font-weight: 500; }
+    .edu-period { font-size: 0.82rem; }
+
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
+    .reveal.visible { opacity: 1; transform: none; }
+
+    @media (max-width: 768px) {
+      .hero {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 36px;
+        min-height: auto;
+        padding: 40px 0 32px;
+      }
+
+      .avatar-wrap {
+        width: 200px;
+        height: 200px;
+      }
+
+      .hero-sub {
+        margin-bottom: 24px;
+        padding: 0 8px;
+      }
+
+      .contact-grid {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+        text-align: left;
+      }
+
+      .contact-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 16px 0;
+      }
+
+      .contact-item .label {
+        font-size: 0.78rem;
+      }
+
+      .contact-value {
+        gap: 6px;
+        font-size: 0.88rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .project-card { grid-template-columns: 1fr; }
+      .info-cards { grid-template-columns: 1fr; }
+      .stacks-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="starfield" aria-hidden="true">
+  <div class="star-layer star-layer--far"  id="layer-far"></div>
+  <div class="star-layer star-layer--mid"  id="layer-mid"></div>
+  <div class="star-layer star-layer--near" id="layer-near"></div>
+</div>
+<div id="shooting-stars" aria-hidden="true"></div>
+
+<div class="wrap">
+  <nav>
+    <ul>
+      <li><a href="#hero" class="active">Home</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#stacks">Stacks</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#award">Award</a></li>
+      <li><a href="#education">Education</a></li>
+    </ul>
+  </nav>
+
+  <section id="hero" class="hero">
+    <div class="avatar-wrap reveal">
+      <div class="avatar-ring"></div>
+      <div class="avatar" id="avatar">
+        <img src="cat.jpeg" alt="슈팅스타 프로필 사진" />
+      </div>
+    </div>
+    <div class="reveal">
+      <p class="hero-tag">Backend Developer</p>
+      <h1>Spring Boot 파트<br><span>슈팅스타</span> 포트폴리오</h1>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <span class="label">📧 Email</span>
+          <div class="contact-value">
+            <a href="mailto:chldbtjd1020@naver.com">chldbtjd1020@naver.com</a>
+            <span class="contact-divider">/</span>
+            <a href="mailto:choiyousung1020@gmail.com">choiyousung1020@gmail.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="label">🐱 Github</span>
+          <div class="contact-value">
+            <a href="https://github.com/yousung1020" target="_blank" rel="noopener">github.com/yousung1020</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <span class="label">📚 Blog</span>
+          <div class="contact-value">
+            <a href="https://shootingstar-1117.tistory.com/" target="_blank" rel="noopener">shootingstar-1117.tistory.com</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <p class="section-label reveal">About Me</p>
+    <h2 class="reveal">저는 이런 사람입니다.</h2>
+    <ul class="about-list" id="about-list"></ul>
+  </section>
+
+  <section id="stacks">
+    <p class="section-label reveal">Tech Stack</p>
+    <h2 class="reveal">🛠️ Stacks</h2>
+    <div class="stacks-grid" id="stacks-grid"></div>
+  </section>
+
+  <section id="projects">
+    <p class="section-label reveal">Work</p>
+    <h2 class="reveal">Projects</h2>
+    <div class="projects-list" id="projects-list"></div>
+  </section>
+
+  <div class="info-cards">
+    <section id="award" class="info-card reveal">
+      <h3>🏆 Award</h3>
+      <p>2025 동양미래EXPO 출품작 경진대회 - <strong style="color:var(--purple)">우수상</strong> (25.05 ~ 25.10)</p>
+    </section>
+    <section id="education" class="info-card reveal">
+      <h3>🎓 Education</h3>
+      <ul>
+        <li>
+          <div class="edu-school">동양미래대학교 정보통신공학과</div>
+          <div class="edu-period">2022.03. ~ 2022.12 (이후 군대)</div>
+        </li>
+        <li>
+          <div class="edu-school">동양미래대학교 컴퓨터소프트웨어공학과</div>
+          <div class="edu-period">2025.03. ~ (재학중)</div>
+        </li>
+        <li>
+          <div class="edu-school">SQLD 자격증 취득</div>
+          <div class="edu-period">2025.09.</div>
+        </li>
+      </ul>
+    </section>
+  </div>
+
+</div>
+
+<script>
+  const ABOUT = [
+    '단순히 코드를 짜는 것보다 사람들과 소통하고, 의미있게 개발하는 것을 좋아합니다!',
+    '유지보수성과 가독성을 고려하여 코드를 작성합니다!',
+    '실력은 부족하지만 언제나 최선을 다하려 노력합니다!',
+    '새로운 도전을 즐기려고 하며, 사람들과 잘 지내기 위해 노력합니다!',
+    '항상 뽜이팅이 넘칩니다!!! 그리고 포기하지 않습니다!!'
+  ];
+
+  const SKILL_LEVEL = { '중상': 78, '중': 66, '중하': 50, '하': 33 };
+
+  const STACKS = [
+    {
+      icon: '🍃', name: 'Spring Boot', level: '중상',
+      desc: [
+        'UMC 워크북을 매 주차 최대한 성실하게 수행했습니다. 또한 이해가 되지 않는 개념들을 그냥 넘기지 않고, 따로 찾아보며 공부했습니다.',
+        'Pace 프로젝트의 백엔드 팀장으로 활동하면서 다양한 경험을 하였습니다. 특히 Spring Security 및 소셜로그인 구현, AWS로의 CI/CD 파이프라인 구축, 다양한 비즈니스 로직 등 다양한 경험을 하였습니다. 가장 값진 경험은 사람들과 협업하는 경험이었습니다!',
+        'Redis를 통해 이벤트 발행 기반 버전 방식이나 Evict 방식을 통해 캐싱 처리를 할 수 있습니다.',
+        'Spring Boot 프레임워크가 내부적으로 어떻게 동작되는지 공부하였습니다. 이를 통해 프록시 객체의 생명주기, Reflection API, Spring AOP, JPA 등 기본적인 개념을 확실히 이해하였습니다.'
+      ]
+    },
+    {
+      icon: '⚡', name: 'React.js', level: '중하',
+      desc: [
+        '학교에서 기본 개념 및 반응형 웹 사이트 설계 방법 등을 배웠습니다.',
+        '학교에서 진행한 팀 프로젝트로(2인) react calendar 라이브러리를 활용해 일정 관리 웹 사이트를 만들어 보았습니다.',
+        '학교 축제 부스에 전시하기 위한 웹 기반 반응속도 테스트 게임을 만들어보았습니다.'
+      ]
+    },
+    {
+      icon: '🧑‍💻', name: 'Servelt/JSP', level: '중하',
+      desc: [
+        '학교에서 MVC 패턴이나 서블릿의 기본 개념을 배웠습니다.',
+        '학교에서 진행한 팀 프로젝트로(3인) 자격증 기반 통합 정보 시스템 및 jsp로 웹 사이트를 만들어 보았습니다.',
+        '서블릿을 통해 웹의 통신 방식과 요청/응답에 대한 근본적인 흐름을 확실히 이해하였습니다.'
+      ]
+    },
+    {
+      icon: '🐙', name: 'Git/Github', level: '중',
+      desc: [
+        '협업을 위해 기본적인 git과 github 사용 방법을 알고 있습니다.',
+        '컨벤션이 정해질 경우 최대한 그 방향에 맞추어 commit 메세지나, PR 내용 등을 맞출 수 있습니다.'
+      ]
+    },
+    {
+      icon: '🐍', name: 'Python/Django', level: '중',
+      desc: [
+        '동양미래EXPO(KES2025 작품 전시회) 프로젝트에서 백엔드 시스템 구축 및 DB 설계, DTW 알고리즘을 통한 사용자 데이터 정확도 분석 시스템 및 RESTful API를 만들었습니다.',
+        '프로그래머스에서 제공하는 Django 강의를 완독하였습니다.',
+        'Django middleware의 구조와 이를 통한 약간의 보안 설계 및 django-allauth 라이브러리를 통해 소셜 로그인을 구현할 수 있습니다.',
+        '웹 크롤링을 통해 학교 공지/식단 알람 봇을 만들어보았습니다.'
+      ]
+    }
+  ];
+
+  const PROJECTS = [
+    {
+      icon: '⛅', name: 'umc 9th - Pace',
+      url: 'https://github.com/UMCTeamPace/Pace_server',
+      desc: '백엔드 팀장을 맡아 진행했습니다. AWS로의 CI/CD 파이프라인 및 인프라 구축, WebClient를 통한 소셜 로그인 구현 및 보안 설정, 핵심 비즈니스 로직 구현 등을 진행하였습니다. 특히 팀장으로서 PM님과 프론트엔드 팀장님과의 회의를 통해 기능을 조율하고, 팀원들에게 업무를 배분하였습니다.'
+    },
+    {
+      icon: '⛅', name: '츄라이 - churai',
+      url: 'https://github.com/NE-O-RDINARY-CHURAI/CHURAI-BE',
+      desc: '너디너리 해커톤에서 진행한 프로젝트 츄라이입니다. AWS로의 CI/CD 파이프라인 구축과 s3 스토리지 연동, 데이터베이스 설계 및 엔티티 제작, 전체적인 CUD 기능을 만들었습니다.'
+    },
+    {
+      icon: '⛅', name: 'smart schedule',
+      url: 'https://github.com/yousung1020/smart-schedule-backend',
+      desc: '학교에서 진행한 기말고사 대체 프로젝트이며, 개인 프로젝트였습니다. RestClient를 통해 소셜 로그인/회원가입을 구현하였고, Redis를 적극 활용하여 자주 조회되는 데이터를 이벤트 발행 기반의 버전 관리 방식으로 캐싱처리를 구현했습니다. 또한 QueryDsl을 통해 동적으로 조건을 유연하게 처리하여 쿼리문을 작성하였고, 기능 단위 테스트 코드를 작성하였습니다.'
+    },
+    {
+      icon: '⛅', name: '동양미래EXPO Django 프론트/백엔드',
+      url: 'https://github.com/yousung1020/Expo2025-Front-Back',
+      desc: '프론트엔드(React js) 부분은 API 연동, 백엔드 부분에서는 전반적인 API 설계 및 제작과 DTW 알고리즘 기반의 AI 기능을 구현했습니다.'
+    },
+    {
+      icon: '⛅', name: '일정 관리 웹사이트',
+      url: 'https://github.com/yousung1020/schedule-app.git',
+      desc: '전반적인 UI 설계 및 캘린더 제작을 했습니다. 팀원과 Github로 협업을 진행했었습니다.'
+    },
+    {
+      icon: '⛅', name: '반응 속도 테스트 게임 웹사이트',
+      url: 'https://github.com/yousung1020/Reaction-speed',
+      desc: 'SPA 방식으로 구현하기 위해 React Router 라이브러리를 사용했으며, 학교 축제 동아리 부스에서 활용하기 위해 개인적으로 제작하였습니다.'
+    },
+    {
+      icon: '⛅', name: '자격증 기반 통합 정보 검색 웹사이트',
+      url: 'https://github.com/yousung1020/student-erp-project',
+      desc: '학교에서 진행한 기말고사 대체 프로젝트이며, 팀장을 맡았습니다. 전반적인 PR 관리, 초기 컨벤션 확립, Jsoup 라이브러리를 통한 웹 크롤링 등의 기능을 제작하였습니다.'
+    },
+    {
+      icon: '⛅', name: '학교 공지사항 알람봇',
+      url: 'https://github.com/yousung1020/Python-Workspace',
+      desc: '웹 크롤링을 통해 학교 웹 사이트의 html 문서 전체를 가져와 파싱하는 방식으로 구현했습니다. BeautifulSoup 라이브러리 및 re 라이브러리를 통해 크롤링하고, 문자열 필터를 구현했습니다. 그리고 discord 라이브러리를 통해 알림이 가게끔 설계했으며, 비동기 http 요청과 함수 처리를 적용시켰습니다.'
+    }
+  ];
+
+  const aboutList = document.getElementById('about-list');
+  aboutList.innerHTML = ABOUT.map((text, i) =>
+    `<li class="reveal"><span class="about-num">0${i + 1}</span><span>${text}</span></li>`
+  ).join('');
+
+  const stacksGrid = document.getElementById('stacks-grid');
+  stacksGrid.innerHTML = STACKS.map(s => {
+    const pct = SKILL_LEVEL[s.level] || 50;
+    return `
+      <div class="stack-card reveal">
+        <div class="stack-header">
+          <span class="stack-name">${s.icon} ${s.name}</span>
+          <span style="font-size:0.8rem;color:var(--purple);font-weight:700;">${s.level}</span>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-label"><span>숙련도</span><span>${s.level}</span></div>
+          <div class="skill-bar"><div class="skill-bar-fill" data-pct="${pct}"></div></div>
+        </div>
+        <ul class="stack-desc">${s.desc.map(d => `<li>${d}</li>`).join('')}</ul>
+      </div>`;
+  }).join('');
+
+  const projectsList = document.getElementById('projects-list');
+  projectsList.innerHTML = PROJECTS.map(p => `
+      <div class="project-card reveal">
+        <div class="project-icon">${p.icon}</div>
+        <div>
+          <div class="project-name">${p.name}</div>
+          <p class="project-desc">${p.desc}</p>
+          <a class="project-link" href="${p.url}" target="_blank" rel="noopener">View on GitHub →</a>
+        </div>
+      </div>`).join('');
+
+  let parallaxLayers = null;
+
+  (function initStarfield() {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const layers = {
+      far:  { el: document.getElementById('layer-far'),  count: isMobile ? 90  : 160 },
+      mid:  { el: document.getElementById('layer-mid'),  count: isMobile ? 45  : 75  },
+      near: { el: document.getElementById('layer-near'), count: isMobile ? 18  : 32  },
+    };
+    const tints = [
+      { tint: 'rgba(255,255,255,0.5)', soft: 'rgba(255,255,255,0.15)' },
+      { tint: 'rgba(167,139,250,0.55)', soft: 'rgba(167,139,250,0.2)' },
+      { tint: 'rgba(34,211,238,0.5)', soft: 'rgba(34,211,238,0.18)' },
+      { tint: 'rgba(199,210,254,0.5)', soft: 'rgba(199,210,254,0.15)' },
+    ];
+
+    function createStar(type, cfg) {
+      const star = document.createElement('div');
+      star.className = `star star--${type}`;
+      const x = Math.random() * 100;
+      const y = Math.random() * 100;
+      const tint = tints[Math.floor(Math.random() * tints.length)];
+      let css = `left:${x}%;top:${y}%;--delay:${(Math.random() * 6).toFixed(2)}s;`;
+      css += `--d:${cfg.dur};--min:${cfg.minOp};--max:${cfg.maxOp};--ease:${cfg.ease};`;
+
+      if (type === 'dust' || type === 'dot') {
+        const size = cfg.sizeMin + Math.random() * (cfg.sizeMax - cfg.sizeMin);
+        css += `width:${size.toFixed(2)}px;height:${size.toFixed(2)}px;`;
+      }
+      if (type === 'glow') {
+        const size = 1.6 + Math.random() * 1.6;
+        const glow = 3 + Math.random() * 5;
+        css += `width:${size.toFixed(2)}px;height:${size.toFixed(2)}px;--glow:${glow.toFixed(1)}px;`;
+        css += `--tint:${tint.tint};--tint-soft:${tint.soft};`;
+      }
+      if (type === 'sparkle') {
+        const arm = 7 + Math.random() * 9;
+        css += `--arm:${arm.toFixed(1)}px;--tint-soft:${tint.soft};`;
+        css += `--min:0.35;--max:0.95;--d:${(3 + Math.random() * 4).toFixed(1)}s;`;
+      }
+      star.style.cssText = css;
+      return star;
+    }
+
+    function fillLayer(layer, count, factory) {
+      const frag = document.createDocumentFragment();
+      for (let i = 0; i < count; i++) frag.appendChild(factory());
+      layer.el.appendChild(frag);
+    }
+
+    fillLayer(layers.far, layers.far.count, () => createStar('dust', {
+      sizeMin: 0.6, sizeMax: 1.2,
+      dur: `${(4 + Math.random() * 5).toFixed(1)}s`,
+      minOp: 0.08, maxOp: 0.45,
+      ease: 'ease-in-out',
+    }));
+    fillLayer(layers.mid, layers.mid.count, () => {
+      const type = Math.random() < 0.82 ? 'dot' : 'glow';
+      return createStar(type, {
+        sizeMin: 1, sizeMax: 2.2,
+        dur: `${(2.5 + Math.random() * 4).toFixed(1)}s`,
+        minOp: 0.2, maxOp: 0.85,
+        ease: 'ease-in-out',
+      });
+    });
+    fillLayer(layers.near, layers.near.count, () => {
+      const roll = Math.random();
+      const type = roll < 0.45 ? 'glow' : roll < 0.8 ? 'sparkle' : 'dot';
+      return createStar(type, {
+        sizeMin: 1.4, sizeMax: 2.8,
+        dur: `${(2 + Math.random() * 3.5).toFixed(1)}s`,
+        minOp: 0.45, maxOp: 1,
+        ease: 'cubic-bezier(0.45, 0, 0.55, 1)',
+      });
+    });
+
+    const shootingRoot = document.getElementById('shooting-stars');
+    const shootCount = isMobile ? 2 : 3;
+    const shootPalette = [
+      { glow: 'rgba(34,211,238,0.45)', glowSoft: 'rgba(34,211,238,0.18)', core: 'rgba(224,242,254,0.95)' },
+      { glow: 'rgba(167,139,250,0.5)', glowSoft: 'rgba(167,139,250,0.2)', core: 'rgba(237,233,254,0.95)' },
+      { glow: 'rgba(255,255,255,0.4)', glowSoft: 'rgba(255,255,255,0.15)', core: 'rgba(255,255,255,0.98)' },
+    ];
+
+    function buildShootKeyframeRule(animName, path) {
+      const rot = path.angle.toFixed(2);
+      return `@keyframes ${animName} {
+  0%   { opacity: 0; transform: translate3d(${path.startX.toFixed(1)}px, ${path.startY.toFixed(1)}px, 0) rotate(${rot}deg); }
+  5%   { opacity: 0.35; }
+  11%  { opacity: 1; }
+  88%  { opacity: 1; }
+  95%  { opacity: 0.35; }
+  100% { opacity: 0; transform: translate3d(${path.endX.toFixed(1)}px, ${path.endY.toFixed(1)}px, 0) rotate(${rot}deg); }
+}`;
+    }
+
+    function createMeteorPath(w, h) {
+      const margin = 55 + Math.random() * 45;
+      const targetX = Math.random() * w;
+      const targetY = 100;
+      const angle = -(28 + Math.random() * 24 + (Math.random() - 0.5) * 10);
+      const rad = angle * Math.PI / 180;
+      const dirX = -Math.cos(rad);
+      const dirY = -Math.sin(rad);
+      const backtrack = margin + Math.random() * Math.hypot(w, h) * 0.32;
+      const distanceJitter = 1.04 + Math.random() * 0.1;
+
+      function pathForEntry(entryX) {
+        const startX = entryX;
+        const startY = -backtrack;
+        const exitX = -margin;
+        const exitY = h + margin;
+        const travelX = (startX - exitX) / (-dirX);
+        const travelY = (exitY - startY) / dirY;
+        const distance = Math.max(travelX, travelY) * distanceJitter;
+        const endX = startX + dirX * distance;
+        const endY = startY + dirY * distance;
+        const tAtY = (targetY - startY) / (endY - startY);
+        return {
+          startX,
+          startY,
+          endX,
+          endY,
+          angle,
+          xAtY: startX + tAtY * (endX - startX),
+        };
+      }
+
+      let lo = -margin;
+      let hi = w * 1.5;
+      for (let i = 0; i < 24; i++) {
+        const mid = (lo + hi) * 0.5;
+        if (pathForEntry(mid).xAtY < targetX) lo = mid;
+        else hi = mid;
+      }
+
+      const { xAtY, ...path } = pathForEntry((lo + hi) * 0.5);
+      return path;
+    }
+
+    function spawnShootingStar(i) {
+      const el = document.createElement('div');
+      el.className = 'shooting-star';
+      const palette = shootPalette[i % shootPalette.length];
+      const tail = 100 + Math.random() * 100;
+      const dur = (3 + Math.random() * 1.8).toFixed(2);
+      const delay = (i * 16 + Math.random() * 14).toFixed(2);
+      const animName = `shoot-path-${i}`;
+      const pathStyle = document.createElement('style');
+      document.head.appendChild(pathStyle);
+
+      function assignRandomPath() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const path = createMeteorPath(w, h);
+        pathStyle.textContent = buildShootKeyframeRule(animName, path);
+        el.style.setProperty('--angle', `${path.angle.toFixed(2)}deg`);
+      }
+
+      el.style.cssText = [
+        `--tail:${tail.toFixed(0)}px;`,
+        `--dur:${dur}s;`,
+        `--delay:${delay}s;`,
+        `--glow:${palette.glow};`,
+        `--glow-soft:${palette.glowSoft};`,
+        `--core:${palette.core};`,
+        `animation-name:${animName};`,
+      ].join('');
+
+      assignRandomPath();
+      el.addEventListener('animationiteration', assignRandomPath);
+      shootingRoot.appendChild(el);
+    }
+
+    for (let i = 0; i < shootCount; i++) spawnShootingStar(i);
+
+    if (!reducedMotion) parallaxLayers = layers;
+  })();
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        e.target.querySelectorAll('.skill-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  let scrollTicking = false;
+  window.addEventListener('scroll', () => {
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      if (parallaxLayers) {
+        parallaxLayers.far.el.style.transform  = `translateY(${y * 0.04}px)`;
+        parallaxLayers.mid.el.style.transform  = `translateY(${y * 0.09}px)`;
+        parallaxLayers.near.el.style.transform = `translateY(${y * 0.16}px)`;
+      }
+      let current = '';
+      sections.forEach(s => { if (y >= s.offsetTop - 100) current = s.id; });
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+      scrollTicking = false;
+    });
+  }, { passive: true });
+</script>
+</body>
+</html>
