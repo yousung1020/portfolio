@@ -323,19 +323,23 @@
     }
     .project-link:hover { gap: 10px; }
 
-    .info-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .info-card {
-      background: var(--bg-card); border: 1px solid var(--border);
-      border-radius: 16px; padding: 28px; backdrop-filter: blur(8px);
+    .credential-section { margin-bottom: 40px; scroll-margin-top: 70px; }
+    .credential-section:last-of-type { margin-bottom: 72px; }
+
+    .record-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 720px;
     }
-    .info-card h3 {
-      font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem;
-      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    .record-list li {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.28);
     }
-    .info-card p, .info-card li { font-size: 0.9rem; color: var(--muted); }
-    .info-card ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
-    .edu-school { color: var(--text); font-weight: 500; }
-    .edu-period { font-size: 0.82rem; }
+    .record-list li:last-child { border-bottom: none; }
+    .record-title { color: var(--text); font-weight: 500; font-size: 0.95rem; margin-bottom: 4px; }
+    .record-meta { font-size: 0.85rem; color: var(--muted); }
 
     .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
     .reveal.visible { opacity: 1; transform: none; }
@@ -384,7 +388,6 @@
 
     @media (max-width: 600px) {
       .project-card { grid-template-columns: 1fr; }
-      .info-cards { grid-template-columns: 1fr; }
       .stacks-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -405,6 +408,7 @@
       <li><a href="#about">About</a></li>
       <li><a href="#stacks">Stacks</a></li>
       <li><a href="#projects">Projects</a></li>
+      <li><a href="#activity">Activity</a></li>
       <li><a href="#award">Award</a></li>
       <li><a href="#education">Education</a></li>
     </ul>
@@ -463,29 +467,48 @@
     <div class="projects-list" id="projects-list"></div>
   </section>
 
-  <div class="info-cards">
-    <section id="award" class="info-card reveal">
-      <h3>🏆 Award</h3>
-      <p>2025 동양미래EXPO 출품작 경진대회 - <strong style="color:var(--purple)">우수상</strong> (25.05 ~ 25.10)</p>
-    </section>
-    <section id="education" class="info-card reveal">
-      <h3>🎓 Education</h3>
-      <ul>
-        <li>
-          <div class="edu-school">동양미래대학교 정보통신공학과</div>
-          <div class="edu-period">2022.03. ~ 2022.12 (이후 군대)</div>
-        </li>
-        <li>
-          <div class="edu-school">동양미래대학교 컴퓨터소프트웨어공학과</div>
-          <div class="edu-period">2025.03. ~ (재학중)</div>
-        </li>
-        <li>
-          <div class="edu-school">SQLD 자격증 취득</div>
-          <div class="edu-period">2025.09.</div>
-        </li>
-      </ul>
-    </section>
-  </div>
+  <section id="activity" class="credential-section">
+    <p class="section-label reveal">Background</p>
+    <h2 class="reveal">🤝 Activity</h2>
+    <ul class="record-list reveal">
+      <li>
+        <div class="record-title">UMC 9th 동양미래대 Spring Boot 챌린저</div>
+        <div class="record-meta">25.09. ~ 26.02.</div>
+      </li>
+      <li>
+        <div class="record-title">UMC 10th 동양미래대 Spring Boot 파트장</div>
+        <div class="record-meta">26.03. ~ (활동중)</div>
+      </li>
+    </ul>
+  </section>
+
+  <section id="award" class="credential-section">
+    <h2 class="reveal">🏆 Award</h2>
+    <ul class="record-list reveal">
+      <li>
+        <div class="record-title">2025 동양미래EXPO 출품작 경진대회 - 우수상</div>
+        <div class="record-meta">25.05 ~ 25.10</div>
+      </li>
+    </ul>
+  </section>
+
+  <section id="education" class="credential-section">
+    <h2 class="reveal">🎓 Education</h2>
+    <ul class="record-list reveal">
+      <li>
+        <div class="record-title">동양미래대학교 정보통신공학과</div>
+        <div class="record-meta">2022.03. ~ 2022.12 (이후 군대)</div>
+      </li>
+      <li>
+        <div class="record-title">동양미래대학교 컴퓨터소프트웨어공학과</div>
+        <div class="record-meta">2025.03. ~ (재학중)</div>
+      </li>
+      <li>
+        <div class="record-title">SQLD 자격증 취득</div>
+        <div class="record-meta">2025.09.</div>
+      </li>
+    </ul>
+  </section>
 
 </div>
 
