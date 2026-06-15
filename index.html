@@ -767,7 +767,10 @@
       const palette = shootPalette[i % shootPalette.length];
       const tail = 100 + Math.random() * 100;
       const dur = (4.2 + Math.random() * 2.2).toFixed(2);
-      const delay = (i * 22 + Math.random() * 18).toFixed(2);
+      const delay = (i === 0
+        ? (0.6 + Math.random() * 2.4)
+        : (i * 14 + Math.random() * 10 + 3)
+      ).toFixed(2);
       const animName = `shoot-path-${i}`;
       const pathStyle = document.createElement('style');
       document.head.appendChild(pathStyle);
