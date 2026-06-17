@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>슈팅스타 | Spring Boot Developer Portfolio</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
@@ -103,38 +105,87 @@
       position: absolute;
       left: 0;
       top: 0;
-      width: var(--tail, 140px);
-      height: 3px;
+      width: 0;
+      height: 0;
       opacity: 0;
-      transform-origin: left center;
+      mix-blend-mode: screen;
       will-change: transform, opacity;
       animation: shoot var(--dur, 2.8s) linear infinite;
       animation-delay: var(--delay, 0s);
     }
-    .shooting-star::before {
-      content: '';
-      position: absolute; inset: 0;
+    .shooting-star__tail {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform-origin: left center;
+      pointer-events: none;
+    }
+    .shooting-star__tail--glow {
+      width: var(--tail, 140px);
+      height: var(--glow-h, 7px);
+      margin-top: calc(var(--glow-h, 7px) / -2);
       background: linear-gradient(
-        to right,
-        #fff 0%,
-        var(--core, rgba(224, 242, 254, 0.95)) 10%,
-        var(--glow, rgba(34, 211, 238, 0.35)) 28%,
+        90deg,
+        var(--glow-soft, rgba(34, 211, 238, 0.22)) 0%,
+        var(--glow, rgba(34, 211, 238, 0.12)) 18%,
+        transparent 72%
+      );
+      filter: blur(var(--glow-blur, 4px));
+      opacity: 0.85;
+    }
+    .shooting-star__tail--core {
+      width: var(--tail, 140px);
+      height: var(--core-h, 1.5px);
+      margin-top: calc(var(--core-h, 1.5px) / -2);
+      border-radius: 0 99px 99px 0;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 1) 0%,
+        var(--core, rgba(236, 248, 255, 0.98)) 4%,
+        var(--glow, rgba(34, 211, 238, 0.55)) 16%,
+        rgba(167, 139, 250, 0.18) 42%,
         transparent 100%
       );
-      clip-path: polygon(0% 50%, 100% 0%, 100% 100%);
+      box-shadow: 0 0 10px 1px var(--glow-soft, rgba(34, 211, 238, 0.18));
     }
-    .shooting-star::after {
+    .shooting-star__head {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .shooting-star__head::before {
       content: '';
       position: absolute;
-      left: 0; top: 50%;
-      width: 4px; height: 4px;
+      left: 50%;
+      top: 50%;
+      width: var(--halo, 10px);
+      height: var(--halo, 10px);
       border-radius: 50%;
-      background: #fff;
       transform: translate(-50%, -50%);
+      background: radial-gradient(
+        circle,
+        var(--glow, rgba(34, 211, 238, 0.55)) 0%,
+        transparent 72%
+      );
+      filter: blur(1px);
+      opacity: 0.9;
+    }
+    .shooting-star__head::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: var(--head, 2.5px);
+      height: var(--head, 2.5px);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
       box-shadow:
-        0 0 6px 2px rgba(255, 255, 255, 0.95),
-        0 0 14px 4px var(--glow, rgba(34, 211, 238, 0.45)),
-        0 0 24px 6px var(--glow-soft, rgba(34, 211, 238, 0.2));
+        0 0 4px 1px rgba(255, 255, 255, 0.95),
+        0 0 12px 3px var(--glow, rgba(34, 211, 238, 0.45)),
+        0 0 22px 5px var(--glow-soft, rgba(34, 211, 238, 0.2));
     }
     /* transform 경로는 JS에서 요소별 @keyframes로 주입 (CSS 변수 transform 보간 불가) */
 
@@ -305,12 +356,10 @@
     .project-card {
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 16px; padding: 28px; backdrop-filter: blur(8px);
-      display: grid; grid-template-columns: auto 1fr; gap: 20px;
       transition: box-shadow 0.3s, border-color 0.3s;
     }
     .project-card:hover { box-shadow: var(--glow); border-color: rgba(34,211,238,0.4); }
 
-    .project-icon { font-size: 2rem; line-height: 1; }
     .project-name {
       font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem;
       font-weight: 700; margin-bottom: 8px;
@@ -387,7 +436,6 @@
     }
 
     @media (max-width: 600px) {
-      .project-card { grid-template-columns: 1fr; }
       .stacks-grid { grid-template-columns: 1fr; }
     }
   </style>
@@ -569,42 +617,42 @@
 
   const PROJECTS = [
     {
-      icon: '⛅', name: 'umc 9th - Pace',
+      name: 'umc 9th - Pace',
       url: 'https://github.com/UMCTeamPace/Pace_server',
       desc: '백엔드 팀장을 맡아 진행했습니다. AWS로의 CI/CD 파이프라인 및 인프라 구축, WebClient를 통한 소셜 로그인 구현 및 보안 설정, 핵심 비즈니스 로직 구현 등을 진행하였습니다. 특히 팀장으로서 PM님과 프론트엔드 팀장님과의 회의를 통해 기능을 조율하고, 팀원들에게 업무를 배분하였습니다.'
     },
     {
-      icon: '⛅', name: '츄라이 - churai',
+      name: '츄라이 - churai',
       url: 'https://github.com/NE-O-RDINARY-CHURAI/CHURAI-BE',
       desc: '너디너리 해커톤에서 진행한 프로젝트 츄라이입니다. AWS로의 CI/CD 파이프라인 구축과 s3 스토리지 연동, 데이터베이스 설계 및 엔티티 제작, 전체적인 CUD 기능을 만들었습니다.'
     },
     {
-      icon: '⛅', name: 'smart schedule',
+      name: 'smart schedule',
       url: 'https://github.com/yousung1020/smart-schedule-backend',
       desc: '학교에서 진행한 기말고사 대체 프로젝트이며, 개인 프로젝트였습니다. RestClient를 통해 소셜 로그인/회원가입을 구현하였고, Redis를 적극 활용하여 자주 조회되는 데이터를 이벤트 발행 기반의 버전 관리 방식으로 캐싱처리를 구현했습니다. 또한 QueryDsl을 통해 동적으로 조건을 유연하게 처리하여 쿼리문을 작성하였고, 기능 단위 테스트 코드를 작성하였습니다.'
     },
     {
-      icon: '⛅', name: '동양미래EXPO Django 프론트/백엔드',
+      name: '동양미래EXPO Django 프론트/백엔드',
       url: 'https://github.com/yousung1020/Expo2025-Front-Back',
       desc: '프론트엔드(React js) 부분은 API 연동, 백엔드 부분에서는 전반적인 API 설계 및 제작과 DTW 알고리즘 기반의 AI 기능을 구현했습니다.'
     },
     {
-      icon: '⛅', name: '일정 관리 웹사이트',
+      name: '일정 관리 웹사이트',
       url: 'https://github.com/yousung1020/schedule-app.git',
       desc: '전반적인 UI 설계 및 캘린더 제작을 했습니다. 팀원과 Github로 협업을 진행했었습니다.'
     },
     {
-      icon: '⛅', name: '반응 속도 테스트 게임 웹사이트',
+      name: '반응 속도 테스트 게임 웹사이트',
       url: 'https://github.com/yousung1020/Reaction-speed',
       desc: 'SPA 방식으로 구현하기 위해 React Router 라이브러리를 사용했으며, 학교 축제 동아리 부스에서 활용하기 위해 개인적으로 제작하였습니다.'
     },
     {
-      icon: '⛅', name: '자격증 기반 통합 정보 검색 웹사이트',
+      name: '자격증 기반 통합 정보 검색 웹사이트',
       url: 'https://github.com/yousung1020/student-erp-project',
       desc: '학교에서 진행한 기말고사 대체 프로젝트이며, 팀장을 맡았습니다. 전반적인 PR 관리, 초기 컨벤션 확립, Jsoup 라이브러리를 통한 웹 크롤링 등의 기능을 제작하였습니다.'
     },
     {
-      icon: '⛅', name: '학교 공지사항 알람봇',
+      name: '학교 공지사항 알람봇',
       url: 'https://github.com/yousung1020/Python-Workspace',
       desc: '웹 크롤링을 통해 학교 웹 사이트의 html 문서 전체를 가져와 파싱하는 방식으로 구현했습니다. BeautifulSoup 라이브러리 및 re 라이브러리를 통해 크롤링하고, 문자열 필터를 구현했습니다. 그리고 discord 라이브러리를 통해 알림이 가게끔 설계했으며, 비동기 http 요청과 함수 처리를 적용시켰습니다.'
     }
@@ -635,12 +683,9 @@
   const projectsList = document.getElementById('projects-list');
   projectsList.innerHTML = PROJECTS.map(p => `
       <div class="project-card reveal">
-        <div class="project-icon">${p.icon}</div>
-        <div>
-          <div class="project-name">${p.name}</div>
-          <p class="project-desc">${p.desc}</p>
-          <a class="project-link" href="${p.url}" target="_blank" rel="noopener">View on GitHub →</a>
-        </div>
+        <div class="project-name">${p.name}</div>
+        <p class="project-desc">${p.desc}</p>
+        <a class="project-link" href="${p.url}" target="_blank" rel="noopener">View on GitHub →</a>
       </div>`).join('');
 
   let parallaxLayers = null;
@@ -723,19 +768,20 @@
     const shootingRoot = document.getElementById('shooting-stars');
     const shootCount = isMobile ? 2 : 3;
     const shootPalette = [
-      { glow: 'rgba(34,211,238,0.45)', glowSoft: 'rgba(34,211,238,0.18)', core: 'rgba(224,242,254,0.95)' },
-      { glow: 'rgba(167,139,250,0.5)', glowSoft: 'rgba(167,139,250,0.2)', core: 'rgba(237,233,254,0.95)' },
-      { glow: 'rgba(255,255,255,0.4)', glowSoft: 'rgba(255,255,255,0.15)', core: 'rgba(255,255,255,0.98)' },
+      { glow: 'rgba(34, 211, 238, 0.62)', glowSoft: 'rgba(34, 211, 238, 0.24)', core: 'rgba(224, 248, 255, 0.98)' },
+      { glow: 'rgba(167, 139, 250, 0.58)', glowSoft: 'rgba(167, 139, 250, 0.22)', core: 'rgba(245, 240, 255, 0.98)' },
+      { glow: 'rgba(199, 210, 254, 0.5)', glowSoft: 'rgba(199, 210, 254, 0.18)', core: 'rgba(255, 255, 255, 0.98)' },
     ];
 
     function buildShootKeyframeRule(animName, path) {
       const rot = path.angle.toFixed(2);
       return `@keyframes ${animName} {
   0%   { opacity: 0; transform: translate3d(${path.startX.toFixed(1)}px, ${path.startY.toFixed(1)}px, 0) rotate(${rot}deg); }
-  5%   { opacity: 0.35; }
-  11%  { opacity: 1; }
-  88%  { opacity: 1; }
-  95%  { opacity: 0.35; }
+  4%   { opacity: 0; }
+  10%  { opacity: 0.55; }
+  16%  { opacity: 1; }
+  78%  { opacity: 0.92; }
+  90%  { opacity: 0.28; }
   100% { opacity: 0; transform: translate3d(${path.endX.toFixed(1)}px, ${path.endY.toFixed(1)}px, 0) rotate(${rot}deg); }
 }`;
     }
@@ -787,12 +833,17 @@
     function spawnShootingStar(i) {
       const el = document.createElement('div');
       el.className = 'shooting-star';
+      el.innerHTML = `
+        <span class="shooting-star__tail shooting-star__tail--glow" aria-hidden="true"></span>
+        <span class="shooting-star__tail shooting-star__tail--core" aria-hidden="true"></span>
+        <span class="shooting-star__head" aria-hidden="true"></span>
+      `;
       const palette = shootPalette[i % shootPalette.length];
-      const tail = 100 + Math.random() * 100;
-      const dur = (4.2 + Math.random() * 2.2).toFixed(2);
+      const tail = 120 + Math.random() * 110;
+      const dur = (4.8 + Math.random() * 2.8).toFixed(2);
       const delay = (i === 0
-        ? (0.6 + Math.random() * 2.4)
-        : (i * 14 + Math.random() * 10 + 3)
+        ? (0.8 + Math.random() * 3.2)
+        : (i * 16 + Math.random() * 12 + 4)
       ).toFixed(2);
       const animName = `shoot-path-${i}`;
       const pathStyle = document.createElement('style');
@@ -813,6 +864,11 @@
         `--glow:${palette.glow};`,
         `--glow-soft:${palette.glowSoft};`,
         `--core:${palette.core};`,
+        `--core-h:${(1 + Math.random() * 0.6).toFixed(2)}px;`,
+        `--glow-h:${(5 + Math.random() * 4).toFixed(1)}px;`,
+        `--glow-blur:${(3 + Math.random() * 2.5).toFixed(1)}px;`,
+        `--head:${(2 + Math.random() * 1.2).toFixed(2)}px;`,
+        `--halo:${(8 + Math.random() * 6).toFixed(1)}px;`,
         `animation-name:${animName};`,
       ].join('');
 
